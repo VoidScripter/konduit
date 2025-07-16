@@ -17,7 +17,6 @@ let shopData = {
 };
 
 function restockBiome(biome) {
-  // You can replace this logic with real item randomization
   shopData[biome] = {
     timestamp: Date.now(),
     items: [
@@ -39,8 +38,14 @@ app.get("/", (req, res) => {
 
 app.get("/shop/:biome", (req, res) => {
   const biome = req.params.biome;
-  if (shopData[biome]) {
-    res.json(shopData[biome]);
+  const data = shopData[biome];
+
+  if (data) {
+    res.json({
+      biome, // ✅ now includes biome name in the response
+      timestamp: data.timestamp,
+      items: data.items
+    });
   } else {
     res.status(404).send("Biome not found");
   }
