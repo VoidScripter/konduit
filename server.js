@@ -5,33 +5,84 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 
+// Full item pool with spawn chances and stock ranges
+const allItems = [
+  {
+    name: "Soggy Fries",
+    chance: 100,
+    minStock: 5,
+    maxStock: 20
+  },
+  {
+    name: "Wet Nuggets",
+    chance: 100,
+    minStock: 2,
+    maxStock: 10
+  },
+  {
+    name: "Glikshake",
+    chance: 70,
+    minStock: 1,
+    maxStock: 6
+  },
+  {
+    name: "Galaxy Burger",
+    chance: 50,
+    minStock: 1,
+    maxStock: 5
+  },
+  {
+    name: "Burrito",
+    chance: 25,
+    minStock: 1,
+    maxStock: 4
+  },
+  {
+    name: "Cookie",
+    chance: 5,
+    minStock: 1,
+    maxStock: 3
+  }
+];
+
+// Helper to pick items based on chance
+function pickItemsWithChance() {
+  const selected = [];
+  for (const item of allItems) {
+    const roll = Math.random() * 100;
+    if (roll <= item.chance) {
+      selected.push({
+        name: item.name,
+        stock: Math.floor(Math.random() * (item.maxStock - item.minStock + 1)) + item.minStock
+      });
+    }
+  }
+  return selected;
+}
+
+// Storage
 let shopData = {
   grasslands: {
     timestamp: Date.now(),
-    items: [
-      { name: "Soggy Fries", stock: 12 },
-      { name: "Wet Nuggets", stock: 8 },
-      { name: "Glikshake", stock: 3 }
-    ]
+    items: pickItemsWithChance()
   }
 };
 
+// Restock biome with new items
 function restockBiome(biome) {
   shopData[biome] = {
     timestamp: Date.now(),
-    items: [
-      { name: "Soggy Fries", stock: Math.floor(Math.random() * 15 + 5) },
-      { name: "Wet Nuggets", stock: Math.floor(Math.random() * 10 + 2) },
-      { name: "Glikshake", stock: Math.floor(Math.random() * 4 + 1) }
-    ]
+    items: pickItemsWithChance()
   };
 }
 
+// Restock every 5 minutes
 setInterval(() => {
   restockBiome("grasslands");
   console.log("Grasslands restocked");
-}, 5 * 60 * 1000); // every 5 minutes
+}, 5 * 60 * 1000);
 
+// Routes
 app.get("/", (req, res) => {
   res.send("Shop Backend is running!");
 });
@@ -42,7 +93,7 @@ app.get("/shop/:biome", (req, res) => {
 
   if (data) {
     res.json({
-      biome, // ✅ now includes biome name in the response
+      biome,
       timestamp: data.timestamp,
       items: data.items
     });
